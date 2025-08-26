@@ -35,16 +35,16 @@ from . import figure
 from . import cmap
 from . import path
 
-from .figure import np, pd, mpl, plt, Path
-from ..general import rng, Block, Iterable
-from ..general import handle_type_to_list, update_dict
-from ... import df as ut_df
 
-from scipy import stats
 
+from .figure import np, pd, mpl, plt, Path,Iterable
+from .figure import ut_df
+from .figure import handle_type_to_list, update_dict
 from .figure import rc_mpl, rc_default, rc_blank
 from .figure import rc_frame, rc_frame_lt, rc_box
 from .figure import rc_tl_notick, rc_tl_off_x, rc_tl_off_y, rc_tl_xt, rc_tl_yr
+
+from scipy import stats
 
 # ----------------------------------------
 # tool

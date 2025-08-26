@@ -2,9 +2,16 @@
 utils.scanpy as ut.sc
 
 """
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import json
 
-from ..general import Path, np, pd, plt, mpl, json
-from ..general import show_dict_key, update_dict, archive_gzip, handle_type_to_list
+
+from ..general import show_dict_key, \
+    update_dict, archive_gzip, handle_type_to_list, \
+    subset_dict, Block
+
 import scanpy as sc
 import scipy
 from collections.abc import Iterable
@@ -12,6 +19,7 @@ from collections.abc import Iterable
 from PIL import Image
 
 Image.MAX_IMAGE_PIXELS = None  # 有的组织图像太大，取消Image的图像大小限制
+
 
 def reverse_img(
         img_arr,
@@ -77,6 +85,7 @@ def reverse_img(
                                                    transpose=transpose)
                                for _ in yield_color_layer(img_arr)])
 
+
 def show_reverse_img(img_arr):
     df_parameter = pd.MultiIndex.from_product(
         [[0, 1], [0, 1], [0, 1]],
@@ -99,6 +108,7 @@ def show_reverse_img(img_arr):
             'transpose={transpose}\nreverse_h={reverse_h}\nreverse_v={reverse_v}' .format(
                 **row),
             verticalalignment='top')
+
 
 def reverse_spatial_img(adata, key_uns_spatial='spatial',
                         key_img=None,
@@ -131,6 +141,7 @@ def reverse_spatial_img(adata, key_uns_spatial='spatial',
 # show
 # ----------------------------------------
 
+
 def show(adata, show_adata=False,
          show_var=False,
          show_check_unique=False,
@@ -162,6 +173,7 @@ def show(adata, show_adata=False,
         else:
             print("[msg] spatial not in adata.uns")
 
+
 def show_spatial(adata):
     if 'spatial' in adata.obsm.keys():
         print("# adata.obsm['spatial']".ljust(75, '-'))
@@ -189,16 +201,20 @@ def show_spatial(adata):
 # get, yield and filter
 # ----------------------------------------
 
+
 def get_key_uns_spatial(adata):
     assert 'spatial' in adata.uns.keys()
     return list(adata.uns['spatial'].keys())
 
+
 def get_dict_spatial(adata, key_uns_spatial):
     return adata.uns['spatial'][key_uns_spatial]
+
 
 def yield_dict_spatial(adata):
     for key_uns_spatial in get_key_uns_spatial(adata):
         yield get_dict_spatial(adata, key_uns_spatial)
+
 
 def yield_key_uns_spatial_and_key_img(adata):
     for key_uns_spatial in get_key_uns_spatial(adata):
@@ -208,6 +224,7 @@ def yield_key_uns_spatial_and_key_img(adata):
         for k_img in dict_spatial.setdefault(_k, {}).keys():
             yield (key_uns_spatial, k_img)
 
+
 def get_img(adata, key_uns_spatial='spatial', key_img='img'):
     """
     尝试从adata.uns['spatial'][key_uns_spatial]\
@@ -216,6 +233,7 @@ def get_img(adata, key_uns_spatial='spatial', key_img='img'):
     return adata.uns['spatial'][key_uns_spatial]\
         .setdefault('images', {})\
         .setdefault(key_img, None)
+
 
 def get_scalefactor(adata, key_uns_spatial='spatial', key_img='img',
                     key_scalefactors_format='tissue_{}_scalef',
@@ -234,6 +252,7 @@ def get_scalefactor(adata, key_uns_spatial='spatial', key_img='img',
         .setdefault('scalefactors', {})\
         .setdefault(key_scalefactors_format.format(key_img), default_value)
 
+
 def get_spot_size(adata, key_uns_spatial='spatial', default_value=1):
     """
     尝试从adata.uns['spatial'][key_uns_spatial]\
@@ -249,6 +268,7 @@ def get_spot_size(adata, key_uns_spatial='spatial', default_value=1):
         .setdefault('scalefactors', {})\
         .setdefault('spot_diameter_fullres', default_value)
 
+
 def get_obs_df(adata, keys, layer=None):
     keys = handle_type_to_list(keys)
     temp = [k for k in keys if not (
@@ -258,10 +278,12 @@ def get_obs_df(adata, keys, layer=None):
     keys = [k for k in keys if k not in temp]
     return sc.get.obs_df(adata, keys, layer=layer)
 
+
 def get_gene_mean(adata, genes, key_group, layer=None):
     genes = handle_type_to_list(genes, str)
     data = get_obs_df(adata, [key_group]+genes)
     return data.groupby(key_group, observed=True).mean()
+
 
 def get_gene_exp_pct(adata, genes, key_group, layer=None):
     genes = handle_type_to_list(genes, str)
@@ -270,9 +292,11 @@ def get_gene_exp_pct(adata, genes, key_group, layer=None):
         data.groupby(key_group, observed=True).count()
     return data
 
+
 def get_gene_mean_and_exp_pct(adata, genes, key_group, layer=None):
     return get_gene_mean(adata, genes, key_group, layer), get_gene_exp_pct(
         adata, genes, key_group, layer)
+
 
 def filter_dict_not_exist_gene(adata, dict_marker):
     temp = pd.concat(
@@ -293,6 +317,7 @@ def filter_dict_not_exist_gene(adata, dict_marker):
 # ----------------------------------------
 # I/O
 # ----------------------------------------
+
 
 def load_adata(p_dir, prefix=''):
     def _load_json(p):
@@ -360,6 +385,7 @@ def load_adata(p_dir, prefix=''):
             adata.uns['spatial'][p_uns_spatial.stem] = dict_spatial
 
     return adata
+
 
 def load_spatial_images(
         adata,
@@ -431,6 +457,7 @@ def load_spatial_images(
             update_images)
     return adata
 
+
 def load_obsm_from_obs(adata, keys_obs, key_obsm, drop_obs=False):
     if isinstance(keys_obs, str):
         keys_obs = [keys_obs]
@@ -438,6 +465,7 @@ def load_obsm_from_obs(adata, keys_obs, key_obsm, drop_obs=False):
     adata.obs = adata.obs.drop(
         columns=keys_obs) if drop_obs else adata.obs
     return adata
+
 
 def load_obs_from_obsm(adata, key_obsm, dimension=2):
     columns = ['{}{}'.format(key_obsm.replace('X_', '').upper(), i)
@@ -449,17 +477,21 @@ def load_obs_from_obsm(adata, key_obsm, dimension=2):
             columns=columns))
     return adata
 
+
 def load_obsm_spatial(adata, keys_pixel='pixel_x,pixel_y'.split(','),
                       drop_obs=False):
     return load_obsm_from_obs(adata, keys_pixel, 'spatial', drop_obs)
+
 
 def load_obsm_UMAP(
         adata, keys_umap='UMAP1,UMAP2'.split(','),
         drop_obs=False):
     return load_obsm_from_obs(adata, keys_umap, 'X_umap', drop_obs)
 
+
 def load_obsm_TSEN(adata, keys_umap='tSNE_1,tSNE_2'.split(','), drop_obs=False):
     return load_obsm_from_obs(adata, keys_umap, 'X_tsne', drop_obs)
+
 
 def load_uns_spatial(adata, key_uns_spatial='spatial',
                      path_imgs=None,
@@ -489,6 +521,7 @@ def load_uns_spatial(adata, key_uns_spatial='spatial',
     adata.uns['spatial'][key_uns_spatial] = dict_spatial
     return adata
 
+
 def load_uns_monocle2(adata, p_dir):
     """
     加载adata.uns['monocle2']
@@ -511,6 +544,7 @@ def load_uns_monocle2(adata, p_dir):
     adata.obs = adata.obs.join(adata.uns['monocle2']['data_df']
                                .loc[:, 'Pseudotime,State'.split(',')])
     return adata
+
 
 def save_as_mtx(adata, p_dir, layer='counts', prefix='', as_int=True,
                 key_img_path='images_path'):
@@ -641,6 +675,7 @@ def save_as_mtx(adata, p_dir, layer='counts', prefix='', as_int=True,
 # Standard Process
 # ----------------------------------------
 
+
 def qc(adata, drop_total_counts=True):
     """
     质量控制 quality control
@@ -675,6 +710,7 @@ def qc(adata, drop_total_counts=True):
                                   adata.obs.columns.str.match('^total_counts_')]
     return adata
 
+
 def normalize_and_log1p(
         adata,
         save_layers_counts=False,
@@ -698,6 +734,7 @@ def normalize_and_log1p(
     if save_layers_normalize_log1p:
         adata.layers["normalize_log1p"] = adata.X.copy()
     return adata
+
 
 def standard_process_help():
     """
@@ -800,6 +837,7 @@ def standard_process(adata, copy=False, stop_after_pca=False,
 # ----------------------------------------
 # other
 # ----------------------------------------
+
 
 def subset_adata(adata, *args):
     """

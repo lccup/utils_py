@@ -5,6 +5,7 @@ def create_Element(tag,text=None,attrs=None):
     if text:
         ele.text = text
     return ele
+
 def assemble_multiple_elements(root,elements):
     """
     将多个元素组装到一个根元素下

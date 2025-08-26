@@ -29,7 +29,7 @@ def musicxml_to_png(xml_path,
     # print(order)
     os.system(order)
 
-def letterbox(img, dstSize=(2560, 3840)):
+def letterbox(img, dstSize=(3200, 3840)):
     ih, iw = img.shape[:2]
     w, h = dstSize
     color = list(map(int, img[0, 0]))

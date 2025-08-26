@@ -23,9 +23,18 @@ figure
 __all__ = 'Path,np,pd,mpl,plt,json,Iterable'.split(',') +\
     'subplots_get_fig_axs,rc_blank'.split(',')
 
-from ..general import Path, np, pd
-from ..general import mpl, plt, json, Iterable
-from ..general import update_dict, subset_dict
+from pathlib import Path
+import json
+from collections.abc import Iterable
+
+import numpy as np
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from .. import df as ut_df
+from ..general import update_dict, subset_dict, \
+    handle_type_to_list,rng, Block
 
 # SourceHanSansCN-Medium 思源黑体 体积极小
 # from https://github.com/iizyd/SourceHanSansCN-TTF-Min

@@ -105,6 +105,13 @@ def product_seq(seq2d, names=None):
     return pd.MultiIndex.from_product(seq2d, names=names).to_frame().reset_index(drop=True)
 
 
+def create_empty_df(dict_col_type=None):
+    """
+    构造并返回一个空的DataFrame, 需提供dict_col_type指定各列的类型
+    """
+    assert isinstance(dict_col_type,dict)
+    return pd.DataFrame(columns=dict_col_type.keys()).astype(dict_col_type)
+
 def ones(size, shape, index=None, columns=None, value=1):
     """
     构造并返回一个size个元素,形状为shape,由value填充的DataFrame
@@ -149,7 +156,8 @@ def iter_dir(p, path_match='', path_match_filter=[], select='f'):
         res = res[res['path'].apply(lambda x: not x.match(_))]
 
     res['name'] = res['path'].apply(lambda x: x.name)
-    res.index = np.arange(res.shape[0])
+    res = res.sort_values("name",ascending=True)
+    res = res.reset_index(drop=True)
     return res.copy()
 
 

@@ -117,7 +117,7 @@ def draw_boxes(img, boxes, color=COLORS["red"][2], thickness=5):
     return img
 
 
-def draw_points(img, points, radius=10, color=COLORS["blue"][3], thickness=-1):
+def draw_points(img, points, radius=15, color=COLORS["blue"][3], thickness=-1):
     for point in points.astype(int):
         cv2.circle(img, point, radius, color, thickness)
     return img
@@ -159,20 +159,22 @@ def draw_boxes_relations(img, relations, boxes1, boxes2,
     return img
 
 
-def draw_points_relations(img, points1, points2, radius=10,
-                          color_point=COLORS["blue"][5],
-                          color_line=COLORS["red"][5], thickness=5):
-    def handle(img, arr, radius, color_point, color_line, thickness):
-        cv2.circle(img, arr[:2], radius, color_point, thickness)
-        cv2.circle(img, arr[2:], radius, color_point, thickness)
-        cv2.line(img, arr[:2], arr[2:], color_line, thickness=3)
+def draw_points_relations(img, points1, points2, radius=15,
+                          color_point1=COLORS["cyan"][5],
+                          color_point2=COLORS["blue"][5],
+                          color_line=COLORS["red"][5],
+                          thickness= - 1):
+    def handle(img, arr, radius, color_point1, color_point2, color_line, thickness):
+        cv2.circle(img, arr[:2], radius, color_point1, thickness)
+        cv2.circle(img, arr[2:], radius, color_point2, thickness)
+        cv2.line(img, arr[:2], arr[2:], color_line, thickness=5)
 
     points = np.hstack([
         points1.astype(int),
         points2.astype(int),
     ])
     np.apply_along_axis(
-        lambda arr: handle(img, arr, radius, color_point,
+        lambda arr: handle(img, arr, radius, color_point1, color_point2,
                            color_line, thickness),
         axis=1, arr=points
     )

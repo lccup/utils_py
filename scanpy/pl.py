@@ -8,12 +8,17 @@
 
 """
 
-from .sc import Path, np, pd, plt, mpl
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
 from .sc import sc
 from .sc import get_scalefactor, get_spot_size
+from .sc import update_dict, subset_dict, Block
 from .. import plot as pl
 
-from ..general import update_dict, subset_dict, Block
+
 
 # ----------------------------------------
 # standard_process
@@ -390,7 +395,7 @@ def spatial_3d(adata, key, ax, cmap=None, scale_factor=None,
         .join(adata.obs.loc[:, [key]])
     df_plot[key] = df_plot[key].astype(str)
 
-    from utils_py.arr import scale
+    from ..arr import scale
     # 将UMAP 的数值 映射到spatial2上
     df_plot['scale_obsm1'] = scale(df_plot['obsm1'],
                                    edge_min=df_plot['spatial1'].min(),

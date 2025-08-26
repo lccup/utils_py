@@ -9,7 +9,7 @@ cmap
     get_from_list
 """
 from .figure import *
-from ... import df as ut_df
+from .. import df as ut_df
 from ..general import str_step_insert, show_str_arr,update_dict
 
 palettes = json.loads(Path(__file__).parent .joinpath(
