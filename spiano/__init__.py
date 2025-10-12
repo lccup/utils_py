@@ -14,23 +14,30 @@ from utils_py.spiano import cvplot as cvpl
 
 def musicxml_to_png(xml_path,
                     png_path=None,
-                    mscore_path=Path("/data1/musescore/musescore/mscore").expanduser(),
+                    mscore_path=Path("/data/mscore/bin/mscore").expanduser(),
                     options=""
                     ):
     xml_path = Path(xml_path)
     # assert xml_path.exists(), "[not exists] {}".format(xml_path)
     if png_path is None:
         png_path = xml_path.with_suffix(".png")
+    # conda create -n mscore -y
+    # conda activate mscore
+    # conda install jack nss xorg-libxcb --name mscore --yes
+    # MuseScore-Studio-4.5.2.251141401-x86_64.AppImage
 
-    order = """ 
-export LD_LIBRARY_PATH=/data1/musescore/musescore/libs:$LD_LIBRARY_PATH
-export QT_QPA_PLATFORM_PLUGIN_PATH=/data1/musescore/musescore/plugins/platforms
+    # export LD_LIBRARY_PATH=/home/lcc/apps/miniconda3/envs/mscore/lib
+    # export QT_QPA_PLATFORM=offscreen
+
+    order = """
+export PATH=$PATH:/data/mscore/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/mscore/qt6_libs
+export QT_QPA_PLATFORM_PLUGIN_PATH=/data/mscore/plugins/platforms
 export QT_QPA_PLATFORM=offscreen
 "{}" -o "{}" "{}" {} > /dev/null 2>&1 
 """.format(
         mscore_path, png_path, xml_path, options
     )
-
     # print(order)
     os.system(order)
 

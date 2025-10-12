@@ -27,8 +27,10 @@ from pathlib import Path
 import platform
 import json as json
 import time
-
+from functools import reduce
 from collections import namedtuple
+import inspect
+
 import numpy as np
 import pandas as pd
 
@@ -78,6 +80,7 @@ def handle_type_to_list(data, t=str):
         data, (list, t)), '[Error] data is not a list or {}'.format(t)
     return [data] if isinstance(data, t) else data
 
+
 def time_tag(format="%y%m%d_%H%M%S"):
     return time.strftime(format, time.localtime())
 
@@ -120,45 +123,68 @@ def show_str_arr(data, n_cols=4, order='F', return_str=False):
         return res
 
 
-def show_obj_attr(obj, regex_filter=['^_'], regex_select=[],
+def show_obj_attr(obj,
+                  regex_filter=['^_'],
+                  regex_select=[],
+                  only="method",
                   show_n_cols=3,
                   group=False,
-                  extract_pat='^([^_]+)_', return_series=False):
-    from functools import reduce
+                  extract_pat='^([^_]+)_',
+                  return_frame=False
+                  ):
+
+    def handel(value):
+        if inspect.ismethod(value):
+            return "method"
+        if inspect.isfunction(value):
+            return "function"
+        return "attribute"
 
     if isinstance(regex_filter, str):
         regex_filter = [regex_filter]
     if isinstance(regex_select, str):
         regex_select = [regex_select]
 
-    attr = pd.Series([_ for _ in dir(obj)])
+    df = pd.Series([[name, value]
+                    for name, value in inspect.getmembers(obj)]).apply(pd.Series)
+    df.columns = ["name", "value"]
+    df["type"] = df["value"].apply(lambda v: handel(v))
+    df = df.loc[:, ["name", "type"]]
+
+    # only
+    if only:
+        assert only in df["type"].unique(
+        ), "only must be one of {}".format(df["type"].unique())
+        df = df[df["type"] == only]
+
     # filter
     if len(regex_filter) == 1:
-        attr = attr[~attr.str.match(regex_filter[0])]
+        df = df[~df["name"].str.match(regex_filter[0])]
     elif len(regex_filter) == 0:
         pass
     else:
-        attr = attr[reduce(lambda x, y: x & y,
-                           [~attr.str.match(_) for _ in regex_filter])]
+        df = df[reduce(lambda x, y: x & y,
+                       [~df["name"].str.match(_) for _ in regex_filter])]
     # select
     if len(regex_select) == 1:
-        attr = attr[attr.str.match(regex_select[0])]
+        df = df[df["name"].str.match(regex_select[0])]
     elif len(regex_select) == 0:
         pass
     else:
-        attr = attr[reduce(lambda x, y: x | y,
-                           [attr.str.match(_) for _ in regex_select])]
+        df = df[reduce(lambda x, y: x | y,
+                       [df["name"].str.match(_) for _ in regex_select])]
+
+    df = df.sort_values("name").reset_index(drop=True)
+
     if show_n_cols:
-        # print(*['\t'.join(_) for _ in np.array_split(
-        # attr.to_numpy(),attr.size//4)],sep='\n')
-        show_str_arr(attr, show_n_cols)
+        show_str_arr(df["name"], show_n_cols)
     if group:
         print('[group]'.ljust(15, '-'))
-        print(attr.str.extract(extract_pat, expand=False).value_counts(dropna=False))
+        print(df["name"].str.extract(extract_pat,
+              expand=False).value_counts(dropna=False))
 
-    if return_series:
-        attr.index = np
-        return attr
+    if return_frame:
+        return df
 
 
 def show_dict_key(data, tag='', sort_key=True):
@@ -277,7 +303,8 @@ def rm_rf(p):
                 rm_rf(i)  # 递归
         p.rmdir()
 
-def mv(p_source,p_target):
+
+def mv(p_source, p_target):
     p_source = Path(p_source)
     p_target = Path(p_target)
     if p_source.exists() and p_target.parent.exists():

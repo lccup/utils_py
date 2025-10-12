@@ -47,7 +47,11 @@ def get_update_headers(dict_update={},headers = headers_default):
     headers.update(dict_update)
     return headers
 
-def get(url,headers = None,data = {},session=session,status_allow=[200],*args,**kvargs):
+def get(url,headers = None,data = {},
+        session=session,
+        status_limit = True,
+        status_allow=[200],
+        *args,**kvargs):
     """
     由session调用get
 
@@ -60,7 +64,8 @@ def get(url,headers = None,data = {},session=session,status_allow=[200],*args,**
     if headers is None:
         headers = get_update_headers()
     r = session.get(url=url,headers=headers,data=data,*args,**kvargs)
-    assert r.status_code in status_allow,'[status is not allowed] {}'.format(r.status_code)
+    if status_limit:
+        assert r.status_code in status_allow,'[status is not allowed] {}'.format(r.status_code)
     return r
 
 # ----------------------------------------
@@ -80,3 +85,16 @@ def load_etree(str_or_path):
         txt = Path(str_or_path).read_text()
     assert not txt is None
     return etree.HTML(txt)
+
+def xpath_set_default(ele, xpath, default=None):
+    """
+    类似dict.setdefault
+    由于xpath 的结果为list,当元素仅可能为1时需要[0]取值
+    而未查找到时需额外判断
+
+    故统一使用该函数处理,
+    若xpath为空,返回default,否则返回查找到的第一个元素
+    """
+    res = ele.xpath(xpath)
+    return res[0] if len(res) > 0 else default
+

@@ -64,11 +64,33 @@ COLORS = {
 
 }
 
-COLORS_CYCLE = itertools.cycle(itertools.chain.from_iterable(zip(
-    COLORS["red"][2:5],
-    COLORS["blue"][2:5],
-    COLORS["green"][2:5],
-)))
+
+class ColorCycle:
+    def __init__(self):
+        self.base_colors = np.array([
+                COLORS["red"][1:6:2],
+                COLORS["blue"][1:6:2],
+                COLORS["orange"][1:6:2],
+                COLORS["green"][1:6:2],
+                COLORS["cyan"][1:6:2],
+            ]).transpose((1, 0, 2)).reshape(-1, 3).tolist()
+        # itertools.cycle(
+        # itertools.chain.from_iterable(zip())
+        # )
+        self.index = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        color = self.base_colors[self.index]
+        self.index = (self.index + 1) % len(self.base_colors)
+        return color
+
+    def reset(self):
+        self.index = 0
+
+COLORS_CYCLE = ColorCycle()
 
 
 def format_location(locations, formatter="{row_id:.0f},{measure_id:.0f},{staff:.0f}"):
