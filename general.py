@@ -194,6 +194,45 @@ def show_dict_key(data, tag='', sort_key=True):
         ks = np.sort(ks)
     print(*['  {}'.format(k) for k in ks], sep='\n')
 
+def show_memory_size(obj, precision=2):
+    module_exists("pympler"),"pip install pympler"
+
+    from pympler.asizeof import asizeof
+
+    def format_memory_size(size_bytes, precision=2):
+        """
+        将字节大小转换为易读的格式
+
+        Args:
+            size_bytes (int): 字节大小
+            precision (int): 小数位数精度
+
+        Returns:
+            str: 格式化后的内存大小字符串
+        """
+        # 定义单位
+        units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+        # 处理零或负数
+        if size_bytes <= 0:
+            return f"0 {units[0]}"
+
+        # 计算合适的单位
+        import math
+        unit_index = min(int(math.log(size_bytes, 1024)), len(units) - 1)
+
+        # 计算对应单位的大小
+        size_in_unit = size_bytes / (1024 ** unit_index)
+
+        # 格式化输出
+        if unit_index == 0:  # 字节，不需要小数
+            return f"{int(size_in_unit)} {units[unit_index]}"
+        else:
+            return f"{size_in_unit:.{precision}f} {units[unit_index]}"
+
+    size_bytes = asizeof(obj)
+    print(format_memory_size(size_bytes, precision))
+    return size_bytes
 
 # # Block
 #
