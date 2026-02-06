@@ -12,7 +12,7 @@ utils_py 的基础, 公共的包在genral中导入
     rm_rf
     str_step_insert
     time_tag
-    
+
     [show]
     show_str_arr
     show_obj_attr
@@ -20,8 +20,9 @@ utils_py 的基础, 公共的包在genral中导入
 
 > class
     Block
-    
+
 """
+
 import os
 from pathlib import Path
 import platform
@@ -30,6 +31,7 @@ import time
 from functools import reduce
 from collections import namedtuple
 import inspect
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -41,6 +43,7 @@ system = platform.system()
 def module_exists(module_name):
     import importlib.util
     import sys
+
     return module_name in sys.modules or importlib.util.find_spec(module_name)
 
 
@@ -76,8 +79,7 @@ def handle_type_to_list(data, t=str):
     若 data 为 t 则返回 [data]
     若 data 为list 则返回 data
     """
-    assert isinstance(
-        data, (list, t)), '[Error] data is not a list or {}'.format(t)
+    assert isinstance(data, (list, t)), "[Error] data is not a list or {}".format(t)
     return [data] if isinstance(data, t) else data
 
 
@@ -85,11 +87,12 @@ def time_tag(format="%y%m%d_%H%M%S"):
     return time.strftime(format, time.localtime())
 
 
-# ----------------------------------------
+##################################################
 # show
-# ----------------------------------------
+##################################################
 
-def show_str_arr(data, n_cols=4, order='F', return_str=False):
+
+def show_str_arr(data, n_cols=4, order="F", return_str=False):
     """
     Examples
     --------
@@ -97,7 +100,7 @@ def show_str_arr(data, n_cols=4, order='F', return_str=False):
     import numpy as np
     rng = np.random.default_rng()
 
-    show_str_arr(['12345678910'[:_] 
+    show_str_arr(['12345678910'[:_]
         for _ in rng.integers(1,10,13)],n_cols=3)
 
     # | 12345678| 1234567  | 123456|
@@ -105,33 +108,33 @@ def show_str_arr(data, n_cols=4, order='F', return_str=False):
     # | 123     | 123456789| 1234  |
     # | 123     | 1        |       |
     # | 123456  | 1        |       |
-"""
+    """
     data = np.array(data)
     if data.size % n_cols != 0:
-        data = np.concatenate(
-            [data, np.repeat('', n_cols - data.size % n_cols)])
+        data = np.concatenate([data, np.repeat("", n_cols - data.size % n_cols)])
     data = pd.Series(data)
-    data = pd.DataFrame(np.reshape(
-        data, (data.size//n_cols, n_cols), order=order))
+    data = pd.DataFrame(np.reshape(data, (data.size // n_cols, n_cols), order=order))
     for k in data.columns:
         data[k] = data[k].str.ljust(data[k].str.len().max())
-    res = '\n'.join(data.apply(
-        lambda row: '| {}|'.format('| '.join(row.values)), axis=1))
+    res = "\n".join(
+        data.apply(lambda row: "| {}|".format("| ".join(row.values)), axis=1)
+    )
     print(res)
 
     if return_str:
         return res
 
 
-def show_obj_attr(obj,
-                  regex_filter=['^_'],
-                  regex_select=[],
-                  only="method",
-                  show_n_cols=3,
-                  group=False,
-                  extract_pat='^([^_]+)_',
-                  return_frame=False
-                  ):
+def show_obj_attr(
+    obj,
+    regex_filter=["^_"],
+    regex_select=[],
+    only="method",
+    show_n_cols=3,
+    group=False,
+    extract_pat="^([^_]+)_",
+    return_frame=False,
+):
 
     def handel(value):
         if inspect.ismethod(value):
@@ -145,16 +148,18 @@ def show_obj_attr(obj,
     if isinstance(regex_select, str):
         regex_select = [regex_select]
 
-    df = pd.Series([[name, value]
-                    for name, value in inspect.getmembers(obj)]).apply(pd.Series)
+    df = pd.Series([[name, value] for name, value in inspect.getmembers(obj)]).apply(
+        pd.Series
+    )
     df.columns = ["name", "value"]
     df["type"] = df["value"].apply(lambda v: handel(v))
     df = df.loc[:, ["name", "type"]]
 
     # only
     if only:
-        assert only in df["type"].unique(
-        ), "only must be one of {}".format(df["type"].unique())
+        assert only in df["type"].unique(), "only must be one of {}".format(
+            df["type"].unique()
+        )
         df = df[df["type"] == only]
 
     # filter
@@ -163,39 +168,43 @@ def show_obj_attr(obj,
     elif len(regex_filter) == 0:
         pass
     else:
-        df = df[reduce(lambda x, y: x & y,
-                       [~df["name"].str.match(_) for _ in regex_filter])]
+        df = df[
+            reduce(lambda x, y: x & y, [~df["name"].str.match(_) for _ in regex_filter])
+        ]
     # select
     if len(regex_select) == 1:
         df = df[df["name"].str.match(regex_select[0])]
     elif len(regex_select) == 0:
         pass
     else:
-        df = df[reduce(lambda x, y: x | y,
-                       [df["name"].str.match(_) for _ in regex_select])]
+        df = df[
+            reduce(lambda x, y: x | y, [df["name"].str.match(_) for _ in regex_select])
+        ]
 
     df = df.sort_values("name").reset_index(drop=True)
 
     if show_n_cols:
         show_str_arr(df["name"], show_n_cols)
     if group:
-        print('[group]'.ljust(15, '-'))
-        print(df["name"].str.extract(extract_pat,
-              expand=False).value_counts(dropna=False))
+        print("[group]".ljust(15, "-"))
+        print(
+            df["name"].str.extract(extract_pat, expand=False).value_counts(dropna=False)
+        )
 
     if return_frame:
         return df
 
 
-def show_dict_key(data, tag='', sort_key=True):
-    print("> {}['']".format(tag).ljust(75, '-'))
+def show_dict_key(data, tag="", sort_key=True):
+    print("> {}['']".format(tag).ljust(75, "-"))
     ks = list(data.keys())
     if sort_key:
         ks = np.sort(ks)
-    print(*['  {}'.format(k) for k in ks], sep='\n')
+    print(*["  {}".format(k) for k in ks], sep="\n")
+
 
 def show_memory_size(obj, precision=2):
-    module_exists("pympler"),"pip install pympler"
+    module_exists("pympler"), "pip install pympler"
 
     from pympler.asizeof import asizeof
 
@@ -211,7 +220,7 @@ def show_memory_size(obj, precision=2):
             str: 格式化后的内存大小字符串
         """
         # 定义单位
-        units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+        units = ["B", "KB", "MB", "GB", "TB", "PB"]
 
         # 处理零或负数
         if size_bytes <= 0:
@@ -219,10 +228,11 @@ def show_memory_size(obj, precision=2):
 
         # 计算合适的单位
         import math
+
         unit_index = min(int(math.log(size_bytes, 1024)), len(units) - 1)
 
         # 计算对应单位的大小
-        size_in_unit = size_bytes / (1024 ** unit_index)
+        size_in_unit = size_bytes / (1024**unit_index)
 
         # 格式化输出
         if unit_index == 0:  # 字节，不需要小数
@@ -234,7 +244,9 @@ def show_memory_size(obj, precision=2):
     print(format_memory_size(size_bytes, precision))
     return size_bytes
 
-# # Block
+
+##################################################
+#  Block
 #
 # `块` 用于将代码分块
 #
@@ -246,6 +258,8 @@ def show_memory_size(obj, precision=2):
 #
 # + 实现了计时功能
 # + 实现了上下文功能
+##################################################
+
 
 class Block:
     """
@@ -288,23 +302,21 @@ class Block:
     def __enter__(self):
         if self.show_comment:
             self.time = time.time()
-            print("[start][{}] {}".format(
-                self.comment,
-                time.strftime('%m%d-%H:%M:%S',
-                              time.localtime())).ljust(75, '-'))
+            print(
+                "[start][{}] {}".format(
+                    self.comment, time.strftime("%m%d-%H:%M:%S", time.localtime())
+                ).ljust(75, "-")
+            )
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         if self.show_comment:
             print(
-                "[end][{}] {}".format(
-                    self.comment,
-                    time.strftime(
-                        '%m%d-%H:%M:%S',
-                        time.localtime())).ljust(
-                    75,
-                    '-'))
-            print("\t{:.3f} s used".format(time.time()-self.time))
+                "[stop ][{}] {}".format(
+                    self.comment, time.strftime("%m%d-%H:%M:%S", time.localtime())
+                ).ljust(75, "-")
+            )
+            print("\t{:.3f} s used".format(time.time() - self.time))
         # 释放content
         self.context = None
 
@@ -312,7 +324,9 @@ class Block:
         return """Block
 \tcomment     : {}
 \tcontext_key : {}
-""".format(self.comment, ','.join(self.context.keys()))
+""".format(
+            self.comment, ",".join(self.context.keys())
+        )
 
     # 对类及其实例未定义的属性有效
     # 若name 不存在于 self.__dir__中,则调用__getattr__
@@ -321,8 +335,8 @@ class Block:
         res = self.context.setdefault(name, None)
         if res is None:
             raise AttributeError(
-                '{.__name__!r} object has no attribute {!r}'
-                .format(cls, name))
+                "{.__name__!r} object has no attribute {!r}".format(cls, name)
+            )
 
         return res
 
@@ -350,20 +364,28 @@ def mv(p_source, p_target):
         p_source.replace(p_target)
 
 
-def str_step_insert(s, step, insert='\n'):
+def str_step_insert(s, step, insert="\n"):
     """
     于s的每step个字符后插入一个insert
     在为图添加超长的文字时
     使用str_step_insert('0123456789012345678901234567',5,insert='\n')
     使字符串换行
     """
-    return insert.join([s[i*step:(i+1)*step] for i in range(len(s)//step + (0 if len(s) % step == 0 else 1))])
+    return insert.join(
+        [
+            s[i * step : (i + 1) * step]
+            for i in range(len(s) // step + (0 if len(s) % step == 0 else 1))
+        ]
+    )
 
 
-def archive_gzip(p_source, decompress=False, out_dir=None, remove_source=True, show=True):
+def archive_gzip(
+    p_source, decompress=False, out_dir=None, remove_source=True, show=True
+):
     """
     gzip 的压缩和解压缩
     """
+
     def archive_gzip_default(p_source, decompress, out_dir, remove_source, show):
         import gzip
         from shutil import copyfileobj
@@ -372,49 +394,77 @@ def archive_gzip(p_source, decompress=False, out_dir=None, remove_source=True, s
         if decompress:
             func_open_source, func_open_target = func_open_target, func_open_source
 
-        with func_open_source(p_source, 'rb') as f_source:
-            with func_open_target(p_target, 'wb') as f_target:
+        with func_open_source(p_source, "rb") as f_source:
+            with func_open_target(p_target, "wb") as f_target:
                 copyfileobj(f_source, f_target)
 
     def archive_gzip_Linux(p_source, decompress, out_dir, remove_source, show):
         import os
-        os.system('gzip -{}c {} > {}'.format(
-            'd' if decompress else '', p_source, p_target)
+
+        os.system(
+            "gzip -{}c {} > {}".format("d" if decompress else "", p_source, p_target)
         )
+
     import platform
 
-    handel_func = {
-        'Linux': archive_gzip_Linux
-    }.setdefault(platform.system(), archive_gzip_default)
+    handel_func = {"Linux": archive_gzip_Linux}.setdefault(
+        platform.system(), archive_gzip_default
+    )
 
     p_source = Path(p_source)
-    assert p_source.exists(), '[not exitst] {}'.format(p_source)
+    assert p_source.exists(), "[not exitst] {}".format(p_source)
 
     out_dir = p_source.parent if out_dir is None else Path(out_dir)
     if decompress:
         assert p_source.match(
-            '*.gz'), '[Error] p_source must end with .gz when decompress=True'
+            "*.gz"
+        ), "[Error] p_source must end with .gz when decompress=True"
         p_target = out_dir.joinpath(p_source.name[:-3])
     else:
-        if p_source.name.endswith('.gz'):
-            print("[archive_gzip] has commpress {}".format(
-                p_source)) if show else None
+        if p_source.name.endswith(".gz"):
+            print("[archive_gzip] has commpress {}".format(p_source)) if show else None
             return
-        p_target = out_dir.joinpath('{}.gz'.format(p_source.name))
+        p_target = out_dir.joinpath("{}.gz".format(p_source.name))
 
     handel_func(p_source, decompress, out_dir, remove_source, show)
-    print('[archive_gzip][{}compress] {} -> {}'.format(
-        'de' if decompress else '', p_source.name, p_target.name)) if show else None
+    (
+        print(
+            "[archive_gzip][{}compress] {} -> {}".format(
+                "de" if decompress else "", p_source.name, p_target.name
+            )
+        )
+        if show
+        else None
+    )
     p_source.unlink() if remove_source else None
 
-# ----------------------------------------
+
+##################################################
+# 使用pickle保存和读取数据
+##################################################
+def pickle_dump(p_input, **kvargs):
+    with open(p_input, "wb") as f:
+        pickle.dump(kvargs, f)
+    print("[save] {} in {}".format(p_input.name, p_input.parent))
+
+
+def pickle_loads(p_input):
+    data = {}
+    with open(p_input, "rb") as f:
+        data = pickle.load(f, fix_imports=True, encoding="bytes")
+    return data
+
+
+##################################################
 # jupyter UI
-# ----------------------------------------
+##################################################
 
 
 def init_jquery_UI():
     from IPython.display import display_javascript
-    display_javascript("""
+
+    display_javascript(
+        """
         if (document.getElementsByClassName("user-container-lcc").length == 0) {
             var ele_body = document.getElementsByTagName("body")[0]
             var ele_div = document.createElement("div")
@@ -424,4 +474,6 @@ def init_jquery_UI():
             ele_div.insertBefore(ele_scr, ele_div.firstChild)
             ele_body.insertBefore(ele_div, ele_body.firstChild)
         }
-    """, raw=True)
+    """,
+        raw=True,
+    )

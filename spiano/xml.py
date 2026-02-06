@@ -1,12 +1,14 @@
 import lxml.etree as ET
 
-def create_Element(tag,text=None,attrs=None):
-    ele = ET.Element(tag,attrib= attrs if attrs else {})
+
+def create_Element(tag, text=None, attrs=None):
+    ele = ET.Element(tag, attrib=attrs if attrs else {})
     if text:
         ele.text = text
     return ele
 
-def assemble_multiple_elements(root,elements):
+
+def assemble_multiple_elements(root, elements):
     """
     将多个元素组装到一个根元素下
     root elements
@@ -14,23 +16,25 @@ def assemble_multiple_elements(root,elements):
     root E1
 
     or
-    
+
     root [E1,E2,E3]
 
     """
-    if isinstance(elements,ET.Element):
+    if isinstance(elements, ET.Element):
         root.append(elements)
     else:
         for i in range(len(elements)):
-            if isinstance(elements[i],ET.Element):
+            if isinstance(elements[i], ET.Element):
                 root.append(elements[i])
             else:
-                assert i - 1 >= 0 and isinstance(elements[i - 1],ET.Element),\
-                    "can not append elements[{}] to elemts[{}]\n\telements[{}] = {}".format(
-                        i,i-1,i,elements[i]
-                    )
-                assemble_multiple_elements(elements[i-1],elements[i])
+                assert i - 1 >= 0 and isinstance(
+                    elements[i - 1], ET.Element
+                ), "can not append elements[{}] to elemts[{}]\n\telements[{}] = {}".format(
+                    i, i - 1, i, elements[i]
+                )
+                assemble_multiple_elements(elements[i - 1], elements[i])
     return root
+
 
 def xpath_set_default(ele, xpath, default=None):
     """

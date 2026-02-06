@@ -20,8 +20,9 @@ def show(arr, n=2, tag=""):
         print(tag)
     if module_exists("IPython"):
         from IPython.display import display
+
         if len(arr.shape) == 1:
-            display(pd.DataFrame(arr[:n][np.newaxis,:]))
+            display(pd.DataFrame(arr[:n][np.newaxis, :]))
         elif len(arr.shape) == 2:
             display(pd.DataFrame(arr[:n, :]))
         else:
@@ -31,8 +32,7 @@ def show(arr, n=2, tag=""):
     print(arr.shape)
 
 
-def scale(arr, arr_min=None, arr_max=None,
-          edge_min=None, edge_max=None, func=None):
+def scale(arr, arr_min=None, arr_max=None, edge_min=None, edge_max=None, func=None):
     """
     将arr 从[arr_min,arr_max]映射到[edge_min,edge_max]
     [可选]在线性映射完成后使用func对结果进行第二次映射
@@ -77,7 +77,7 @@ def scale(arr, arr_min=None, arr_max=None,
         # print('edge_min,edge_max = arr_min,arr_max')
         edge_min, edge_max = arr_min, arr_max
 
-    res = (edge_max-edge_min)/(arr_max-arr_min) * (arr - arr_min) + edge_min
+    res = (edge_max - edge_min) / (arr_max - arr_min) * (arr - arr_min) + edge_min
     if func:
         res = np.vectorize(func)(res)
     return res
@@ -93,5 +93,5 @@ def yield_ele_by_count(arr, counts):
     """
     index = 0
     for c in counts:
-        yield arr[index:index+c]
+        yield arr[index : index + c]
         index += c

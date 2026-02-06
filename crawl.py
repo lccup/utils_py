@@ -15,7 +15,6 @@
     load_etree
 """
 
-
 from pathlib import Path
 import json
 import requests
@@ -23,16 +22,16 @@ from lxml import etree
 
 session = requests.session()
 
-headers_default = {'User-Agent':
-'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0'
+headers_default = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 Edg/125.0.0.0"
 }
 
-# ----------------------------------------
+##################################################
 # requests发送网络请求
-# ----------------------------------------
+##################################################
 
 
-def get_update_headers(dict_update={},headers = headers_default):
+def get_update_headers(dict_update={}, headers=headers_default):
     """
     使用dict_update对headers进行更新
     首先对headers进行copy, 再update, 不会对外部的headers进行修改
@@ -47,11 +46,17 @@ def get_update_headers(dict_update={},headers = headers_default):
     headers.update(dict_update)
     return headers
 
-def get(url,headers = None,data = {},
-        session=session,
-        status_limit = True,
-        status_allow=[200],
-        *args,**kvargs):
+
+def get(
+    url,
+    headers=None,
+    data={},
+    session=session,
+    status_limit=True,
+    status_allow=[200],
+    *args,
+    **kvargs
+):
     """
     由session调用get
 
@@ -63,14 +68,18 @@ def get(url,headers = None,data = {},
     """
     if headers is None:
         headers = get_update_headers()
-    r = session.get(url=url,headers=headers,data=data,*args,**kvargs)
+    r = session.get(url=url, headers=headers, data=data, *args, **kvargs)
     if status_limit:
-        assert r.status_code in status_allow,'[status is not allowed] {}'.format(r.status_code)
+        assert r.status_code in status_allow, "[status is not allowed] {}".format(
+            r.status_code
+        )
     return r
 
-# ----------------------------------------
+
+##################################################
 # 使用lxml.etree进行xpath解析
-# ----------------------------------------
+##################################################
+
 
 def load_etree(str_or_path):
     txt = None
@@ -86,6 +95,7 @@ def load_etree(str_or_path):
     assert not txt is None
     return etree.HTML(txt)
 
+
 def xpath_set_default(ele, xpath, default=None):
     """
     类似dict.setdefault
@@ -97,4 +107,3 @@ def xpath_set_default(ele, xpath, default=None):
     """
     res = ele.xpath(xpath)
     return res[0] if len(res) > 0 else default
-
